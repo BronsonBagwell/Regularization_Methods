@@ -1,0 +1,187 @@
+---
+title: "K-Fold Cross Validation and Regularization Methods"
+author: "Bronson Bagwell"
+date: "2024-01-19"
+output: html_document
+---
+
+## Loading Packages Needed
+
+```{r, results='hide', warning=FALSE, message=FALSE}
+library(psych)  
+library(caret)
+library(glmnet)
+library(ggplot2)
+```
+
+## Loading and Cleaning Data for Analysis and Regression
+
+```{r, results='hide'}
+data <- read.csv("BostonHousing.csv")
+
+str(data)   
+summary(data)   
+
+data$chas <- as.factor(data$chas)
+data$rad <- as.factor(data$rad)
+
+str(data)  
+summary(data) 
+
+sum(is.na(data))
+
+data <- data[-c(4,9)] 
+```
+**Question 1** Make scatterplot matrix of the predictors (columns) in this data set. Describe your
+findings.
+```{r}
+pairs(data)  
+round(cor(data),2)  
+pairs.panels(data)
+```
+
+  Analysis of the Scatterplot matrix reveals that 'rm' exhibits the highest positive correlation with 'medv' at 0.67, followed by 'zn' at 0.34. This indicates a substantial positive influence of these two variables on 'medv.'Conversely, 'lstat' at -0.56 and 'indus' at -0.47 showcase the most robust negative correlations with 'medv.' These are the top two negatively correlated variables that could potentially hold significance in prediction. Other variables like 'crim,' 'nox,' 'age,' 'tax,' and 'ptratio' may also contribute to negative correlations.
+    
+**Question 2** Are any of the predictors associated with per capita crime rate? If so, explain the
+relationship.
+
+  The variable that exhibits the strongest association with per capita crime rate is 'tax,' with a correlation of 0.58.Additionally, moderate correlations with the per capita crime rate are observed for variables such as 'nox' and 'lstat.'Other variables, including 'dis,' 'b,' and 'medv,' show negative weak correlations with per capita crime rate.
+     
+**Question 3** Why should the data be partitioned into training and validation sets? For what will the
+training set be used? For what will the validation set be used? 
+
+  The practice of partitioning data into training and validation sets is essential for regression, using the data to train the model on the patterns and relationships within the training set, particularly in estimating coefficients, then evaluating the model's performance on new, unseen data through from the validation set. This approach helps guard against overfitting and ensures a reliable assessment of the model's effectiveness beyond the training data.
+  
+**Question 4** Split the data set into 80% training set and a 20% test set. (2 pts). Use
+set.seed(7332.01)  
+```{r, results='hide'}
+set.seed(7332.01) 
+Index <- createDataPartition(data$medv,p=0.8,list=FALSE)
+trdata <- data[Index,]
+tsdata <- data[-Index,] 
+head(trdata) 
+head(tsdata)
+```
+**Question 5** Fit a linear model using least squares (OLS model) on the training set and report the test
+RMSE and Rsquare
+
+```{r, results='hide'}
+cntrl <- trainControl(method="repeatedcv",number = 10, repeats = 5)
+
+model_ols <- train(medv~., 
+                   data=trdata,
+                   method="lm",
+                   trControl=cntrl)
+```
+OLS Test RMSE and RSquare
+```{r}
+model_olspred_ts <- predict(model_ols,newdata=tsdata)
+
+model_olsperformance_ts <- data.frame(RMSE=RMSE(model_olspred_ts,tsdata$medv),
+                                      Rsquare=R2(model_olspred_ts,tsdata$medv))
+print(model_olsperformance_ts)
+```
+
+**Question 6** Fit a lasso model on the training set, with λ chosen by cross-validation. What are the
+best tuning parameters? What are the top 3 important variables? Report the test RMSE,
+Rsquare.
+
+```{r, results='hide'}
+lambda_grid <- 10^seq(0.5,-0.5,length=100)
+
+model_laso <- train(medv~.,
+                    data=trdata,
+                    method="glmnet",
+                    tuneGrid=expand.grid(alpha=1,lambda=lambda_grid),
+                    trControl=cntrl)
+```
+Best Turning Parameters
+```{r}
+model_laso$bestTune
+```
+Top 3 Important Variables
+```{r}
+ggplot(varImp(model_laso))
+```
+
+Lasso Model Test RMSE and Rsquare
+```{r}
+model_lasopred_ts <- predict(model_laso,newdata=tsdata)
+
+model_lasoperformance_ts <- data.frame(RMSE=RMSE(model_lasopred_ts,tsdata$medv),
+                                       Rsquare=R2(model_lasopred_ts,tsdata$medv))
+print(model_lasoperformance_ts)
+```
+
+**Question 7** Fit a Ridge regression model on the training set, with λ chosen by cross-validation.
+What are the best tuning parameters? What are the top 3 important variables? Report
+the test RMSE and Rsquare.
+```{r}
+model_rdg <- train(medv~.,
+                   data=trdata,
+                   method="glmnet",
+                   tuneGrid=expand.grid(alpha=0,lambda=lambda_grid),
+                   trControl=cntrl)
+```
+Best Turning Parameters
+```{r}
+model_rdg$bestTune
+```
+Top 3 Important Variables
+```{r}
+ggplot(varImp(model_rdg))
+```
+
+Ridge Model Test RMSE and Rsquare
+```{r}
+
+model_rdgpred_ts <- predict(model_rdg,newdata=tsdata)
+
+model_rdgperformance_ts <- data.frame(RMSE=RMSE(model_rdgpred_ts,tsdata$medv),
+                                      Rsquare=R2(model_rdgpred_ts,tsdata$medv))
+print(model_rdgperformance_ts)
+```
+
+**Question 8** Fit a Elastic Net Regression model on the training set, with α and λ chosen by crossvalidation. What are the best tuning parameters? Report the test RMSE and Rsquare.
+
+```{r}
+model_net <- train(medv~.,
+                   data=trdata,
+                   method="glmnet",
+                   tuneGrid=expand.grid(alpha=seq(0,0.5, length=10),lambda=lambda_grid),
+                   trControl=cntrl)
+```
+Best Turning Parameters
+```{r}
+model_net$bestTune
+```
+Elastic Net Regression Model Test RMSE and Rsquare
+```{r}
+model_netpred_ts <- predict(model_net,newdata=tsdata)
+
+model_netperformance_ts <- data.frame(RMSE=RMSE(model_netpred_ts,tsdata$medv),
+                                      Rsquare=R2(model_netpred_ts,tsdata$medv))
+print(model_netperformance_ts)
+```
+
+**Question 9** What’s the best performing model from LASSO, RIDGE and ELASTIC NET? Describe
+the best mode. (For some Reason RMarkdown isn't showing the correct values here, refer to RMarkdown file and Run Chunk to see actual numbers)
+
+```{r}
+comp_ts <- matrix(c(model_lasoperformance_ts,model_rdgperformance_ts,model_netperformance_ts ),ncol=2,byrow=TRUE)
+colnames(comp_ts) <- c("RMSE","Rsquare")
+rownames(comp_ts) <- c("LASSO","RIDGE","Net")
+print(comp_ts, digits=4)
+```
+Ridge is the best with the lowest RSME of 4.945 and highest RSquared .7689, with the following best tune.
+
+```{r}
+model_net$bestTune
+```
+
+
+
+**Question 10** Write the names of each team who worked together. If you do it alone, just write your
+name.
+
+Bronson
