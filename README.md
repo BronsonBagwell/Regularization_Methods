@@ -26,8 +26,9 @@ This project applies regularization techniques to predict median home values in 
 ![glmnet](https://img.shields.io/badge/glmnet-276DC3?style=flat-square&logo=r&logoColor=white)
 ![caret](https://img.shields.io/badge/caret-276DC3?style=flat-square&logo=r&logoColor=white)
 ![psych](https://img.shields.io/badge/psych-276DC3?style=flat-square&logo=r&logoColor=white)
+![ggplot2](https://img.shields.io/badge/ggplot2-276DC3?style=flat-square&logo=r&logoColor=white)
 
 ## How to Run
 1. Clone the repository: `git clone https://github.com/BronsonBagwell/Regularization_Methods.git`
 2. Open the HTML file in a browser, or run the R Markdown file in RStudio
-3. Required packages: `glmnet`, `caret`, `psych`
+3. Required packages: `glmnet`, `caret`, `psych`, `ggplot2`
