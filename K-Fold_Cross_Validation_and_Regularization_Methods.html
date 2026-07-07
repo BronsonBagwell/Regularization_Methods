@@ -533,18 +533,23 @@ print(model_netperformance_ts)</code></pre>
 ## 1 5.353045 0.7323675</code></pre>
 <p><strong>Question 9</strong> What’s the best performing model from
 LASSO, RIDGE and ELASTIC NET? Describe the best mode.</p>
-<pre class="r"><code>comp_ts &lt;- rbind(LASSO = model_lasoperformance_ts,
+<pre class="r"><code>comp_ts &lt;- rbind(OLS   = model_olsperformance_ts,
+                 LASSO = model_lasoperformance_ts,
                  RIDGE = model_rdgperformance_ts,
                  Net   = model_netperformance_ts)
 print(comp_ts, digits = 4)</code></pre>
 <pre><code>##        RMSE Rsquare
+## OLS   5.271  0.7197
 ## LASSO 5.355  0.7321
 ## RIDGE 5.353  0.7324
 ## Net   5.353  0.7324</code></pre>
-<p>Ridge is the best with the lowest RMSE of 5.353 and highest RSquared
-of 0.7324. The Elastic Net search also selected alpha = 0 (pure Ridge),
-so it matches Ridge’s performance, with the shared best tune shown
-below.</p>
+<p>Among the penalized models, Ridge is the best with the lowest RMSE of
+5.353 and highest RSquared of 0.7324. Notably, the OLS baseline posts a
+slightly lower test RMSE (5.271) than any of the penalized models,
+although Ridge and Elastic Net edge it out on caret’s correlation-based
+RSquared (0.7324 vs 0.7197). The Elastic Net search also selected alpha
+= 0 (pure Ridge), so it matches Ridge’s performance, with the shared
+best tune shown below.</p>
 <pre class="r"><code>model_net$bestTune</code></pre>
 <pre><code>##    alpha   lambda
 ## 67     0 1.467799</code></pre>

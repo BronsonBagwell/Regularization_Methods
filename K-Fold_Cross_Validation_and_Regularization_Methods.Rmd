@@ -166,12 +166,13 @@ print(model_netperformance_ts)
 the best mode.
 
 ```{r}
-comp_ts <- rbind(LASSO = model_lasoperformance_ts,
+comp_ts <- rbind(OLS   = model_olsperformance_ts,
+                 LASSO = model_lasoperformance_ts,
                  RIDGE = model_rdgperformance_ts,
                  Net   = model_netperformance_ts)
 print(comp_ts, digits = 4)
 ```
-Ridge is the best with the lowest RMSE of 5.353 and highest RSquared of 0.7324. The Elastic Net search also selected alpha = 0 (pure Ridge), so it matches Ridge's performance, with the shared best tune shown below.
+Among the penalized models, Ridge is the best with the lowest RMSE of 5.353 and highest RSquared of 0.7324. Notably, the OLS baseline posts a slightly lower test RMSE (5.271) than any of the penalized models, although Ridge and Elastic Net edge it out on caret's correlation-based RSquared (0.7324 vs 0.7197). The Elastic Net search also selected alpha = 0 (pure Ridge), so it matches Ridge's performance, with the shared best tune shown below.
 
 ```{r}
 model_net$bestTune
